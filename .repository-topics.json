@@ -1,0 +1,11 @@
+[
+  "alerts",
+  "cli",
+  "eal",
+  "embeddings",
+  "flags-2-env",
+  "pgvector",
+  "rust",
+  "semantic-search",
+  "websocket"
+]

@@ -1,0 +1,35 @@
+[help]
+url = "https://github.com/embedded-alerts/eal-cli"
+
+[env]
+ignore = ["EAL_API_TOKEN"]
+
+[flags.api_url]
+type = "string"
+env = "EAL_API_URL"
+default = "http://127.0.0.1:8080"
+aliases = ["api-url"]
+help = "Base URL for the Embedded Alerts API."
+
+[flags.timeout_seconds]
+type = "integer"
+env = "EAL_TIMEOUT_SECONDS"
+default = 20
+aliases = ["timeout-seconds"]
+help = "HTTP timeout in seconds."
+
+[flags.output]
+type = "string"
+env = "EAL_OUTPUT"
+default = "json"
+aliases = ["output"]
+help = "Output mode: json or text."
+
+[commands.health]
+description = "Check API health"
+
+[commands.list]
+description = "List alert-rules"
+
+[commands.watch]
+description = "Watch WebSocket events"
