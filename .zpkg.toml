@@ -1,0 +1,20 @@
+[package]
+org = "embedded-alerts"
+name = "eal-cli"
+version = "0.1.0"
+description = "CLI package for Embedded Alerts"
+license = "MIT"
+language = "rust"
+
+[package.repository]
+vcs = "git"
+url = "https://github.com/embedded-alerts/eal-cli"
+
+[publish]
+include_readme = true
+tag_format = "v{version}"
+
+[dependencies]
+"embedded-alerts/eal-clients" = "^0.1.0"
+"embedded-alerts/eal-interfaces" = "^0.1.0"
+"embedded-alerts/eal-libs" = "^0.1.0"
