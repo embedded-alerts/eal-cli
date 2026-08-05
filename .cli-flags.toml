@@ -1,35 +1,49 @@
 [help]
 url = "https://github.com/embedded-alerts/eal-cli"
+columns = ["options", "env", "type", "default", "description"]
+
+[parse]
+command_env = "EAL_COMMAND"
+errors_env = "EAL_PARSE_ERRORS"
+unknown_options_env = "EAL_UNKNOWN_OPTIONS"
 
 [env]
-ignore = ["EAL_API_TOKEN"]
+ignore = ["EAL_TOKEN", "SUPABASE_SERVICE_ROLE_KEY"]
 
-[flags.api_url]
+[flags.base_url]
+env = "EAL_BASE_URL"
+aliases = ["base-url"]
 type = "string"
-env = "EAL_API_URL"
 default = "http://127.0.0.1:8080"
-aliases = ["api-url"]
 help = "Base URL for the Embedded Alerts API."
 
 [flags.timeout_seconds]
-type = "integer"
 env = "EAL_TIMEOUT_SECONDS"
-default = 20
 aliases = ["timeout-seconds"]
+type = "integer"
+default = 20
 help = "HTTP timeout in seconds."
 
 [flags.output]
-type = "string"
 env = "EAL_OUTPUT"
-default = "json"
 aliases = ["output"]
+type = "string"
+default = "json"
 help = "Output mode: json or text."
 
 [commands.health]
-description = "Check API health"
+help = "Check API health."
 
 [commands.list]
-description = "List alert-rules"
+help = "List semantic alert rules."
+
+[commands.get]
+help = "Get one alert rule."
+[commands.get.flags.id]
+env = "EAL_ID"
+aliases = ["id"]
+type = "string"
+help = "Alert-rule UUID."
 
 [commands.watch]
-description = "Watch WebSocket events"
+help = "Watch the API WebSocket alert stream."
