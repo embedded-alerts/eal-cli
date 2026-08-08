@@ -1,4 +1,5 @@
 name: CLI portability
+# Permanent read-only matrix; the lockfile bootstrap has self-deleted.
 
 on:
   pull_request:
