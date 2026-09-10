@@ -13,13 +13,23 @@ url = "https://github.com/embedded-alerts/eal-cli"
 [publish]
 include_readme = true
 tag_format = "v{version}"
-exclude = [".vendor/.zed/**"]
+smoke_test = "test -x \"$ZED_PKG_TEST_TARGET/target/release/eal-cli\" && \"$ZED_PKG_TEST_TARGET/target/release/eal-cli\" --help >/dev/null"
+exclude = [".env", ".env.*", ".direnv/**", ".zed/**", ".zed-pack/**", ".vendor/.zed/**", "target/**", "tmp/**", "**/*.log", ".DS_Store"]
 
+# Cargo.lock is authoritative until the org libraries are real Cargo and Zed
+# dependencies of this executable.
 [dependencies]
-"embedded-alerts/eal-clients" = "^0.1.0"
-"embedded-alerts/eal-interfaces" = "^0.1.0"
-"embedded-alerts/eal-libs" = "^0.1.0"
+
+[build]
+command = "cargo build --release --locked --bin eal-cli"
+outputs = ["target/release/eal-cli"]
+
+[bin]
+eal-cli = "target/release/eal-cli"
 
 [install]
 dir = ".vendor/.zed"
-adapter = "rust"
+adapter = "none"
+
+[scripts]
+test = "cargo test --all-targets --locked"
