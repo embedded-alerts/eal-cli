@@ -47,6 +47,25 @@ fn validate_base_url(value: &str) -> anyhow::Result<String> {
     Ok(parsed.to_string().trim_end_matches('/').to_owned())
 }
 
+
+fn build_alert_url(base: &str, id: &str) -> anyhow::Result<reqwest::Url> {
+    // IDs are single opaque path segments, not URL fragments or paths.
+    if id.is_empty()
+        || id.len() > 256
+        || matches!(id, "." | "..")
+        || !id
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.' | b':'))
+    {
+        bail!("EAL_ID must be a non-empty, bounded URL path identifier");
+    }
+    let mut url = reqwest::Url::parse(&format!("{base}/v1/alerts/"))?;
+    url.path_segments_mut()
+        .map_err(|_| anyhow::anyhow!("EAL_BASE_URL must support path segments"))?
+        .push(id);
+    Ok(url)
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let command = apply_flags()?;
@@ -61,7 +80,6 @@ async fn main() -> anyhow::Result<()> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(timeout))
         .build()?;
-
 
     match command.as_str() {
         "health" => {
@@ -82,7 +100,7 @@ async fn main() -> anyhow::Result<()> {
             let id = std::env::var("EAL_ID").context("--id is required")?;
             print_response(
                 client
-                    .get(format!("{base}/v1/alerts/{id}"))
+                    .get(build_alert_url(&base, &id)?)
                     .send()
                     .await?,
                 &output,
@@ -123,7 +141,7 @@ async fn watch(base: &str) -> anyhow::Result<()> {
 
 #[cfg(test)]
 mod url_validation_tests {
-    use super::validate_base_url;
+    use super::{build_alert_url, validate_base_url};
 
     #[test]
     fn valid_http_and_https_bases_are_canonicalized() {
@@ -135,6 +153,31 @@ mod url_validation_tests {
             validate_base_url("https://example.test/api/").unwrap(),
             "https://example.test/api"
         );
+    }
+
+    #[test]
+    fn alert_identifiers_are_single_bounded_path_segments() {
+        let base = validate_base_url("https://example.test/api/").unwrap();
+        assert_eq!(
+            build_alert_url(&base, "abc:12-foo_bar.9").unwrap().as_str(),
+            "https://example.test/api/v1/alerts/abc:12-foo_bar.9"
+        );
+        for invalid in [
+            "",
+            ".",
+            "..",
+            "../admin",
+            "a/b",
+            "a?token=secret",
+            "a#fragment",
+            "%2fadmin",
+            "a\\nother",
+            "💡",
+        ] {
+            assert!(build_alert_url(&base, invalid).is_err(), "accepted unsafe ID: {invalid:?}");
+        }
+        assert!(build_alert_url(&base, &"x".repeat(257)).is_err());
+        assert!(build_alert_url(&base, &"x".repeat(256)).is_ok());
     }
 
     #[test]
