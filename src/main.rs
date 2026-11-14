@@ -171,7 +171,7 @@ mod url_validation_tests {
             "a?token=secret",
             "a#fragment",
             "%2fadmin",
-            "a\\nother",
+            "a\nother",
             "💡",
         ] {
             assert!(build_alert_url(&base, invalid).is_err(), "accepted unsafe ID: {invalid:?}");
