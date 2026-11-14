@@ -32,6 +32,21 @@ fn apply_flags() -> anyhow::Result<String> {
     Ok(command)
 }
 
+fn validate_base_url(value: &str) -> anyhow::Result<String> {
+    let parsed = reqwest::Url::parse(value)
+        .context("EAL_BASE_URL must be an absolute HTTP(S) URL")?;
+    if !matches!(parsed.scheme(), "http" | "https")
+        || parsed.host_str().is_none()
+        || !parsed.username().is_empty()
+        || parsed.password().is_some()
+        || parsed.query().is_some()
+        || parsed.fragment().is_some()
+    {
+        bail!("EAL_BASE_URL must use HTTP(S) and contain no credentials, query, or fragment");
+    }
+    Ok(parsed.to_string().trim_end_matches('/').to_owned())
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let command = apply_flags()?;
