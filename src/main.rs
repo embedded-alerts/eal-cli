@@ -52,6 +52,7 @@ async fn main() -> anyhow::Result<()> {
     let command = apply_flags()?;
     let base =
         std::env::var("EAL_BASE_URL").unwrap_or_else(|_| "http://127.0.0.1:8080".into());
+    let base = validate_base_url(&base)?;
     let timeout = std::env::var("EAL_TIMEOUT_SECONDS")
         .ok()
         .and_then(|value| value.parse::<u64>().ok())
@@ -60,7 +61,7 @@ async fn main() -> anyhow::Result<()> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(timeout))
         .build()?;
-    let base = base.trim_end_matches('/');
+
 
     match command.as_str() {
         "health" => {
@@ -88,7 +89,7 @@ async fn main() -> anyhow::Result<()> {
             )
             .await
         }
-        "watch" => watch(base).await,
+        "watch" => watch(&base).await,
         _ => bail!("choose one command: health, list, get, watch"),
     }
 }
@@ -118,4 +119,37 @@ async fn watch(base: &str) -> anyhow::Result<()> {
         println!("{}", message?.into_text()?);
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod url_validation_tests {
+    use super::validate_base_url;
+
+    #[test]
+    fn valid_http_and_https_bases_are_canonicalized() {
+        assert_eq!(
+            validate_base_url("http://127.0.0.1:8080/").unwrap(),
+            "http://127.0.0.1:8080"
+        );
+        assert_eq!(
+            validate_base_url("https://example.test/api/").unwrap(),
+            "https://example.test/api"
+        );
+    }
+
+    #[test]
+    fn invalid_and_credentialed_bases_are_rejected_before_network_io() {
+        for value in [
+            "",
+            "/api",
+            "file:///tmp/secret",
+            "ftp://example.test",
+            "http://user@example.test",
+            "https://user:pass@example.test",
+            "https://example.test/path?token=secret",
+            "https://example.test/path#fragment",
+        ] {
+            assert!(validate_base_url(value).is_err(), "accepted unsafe URL: {value}");
+        }
+    }
 }
