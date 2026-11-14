@@ -59,7 +59,7 @@ fn build_alert_url(base: &str, id: &str) -> anyhow::Result<reqwest::Url> {
     {
         bail!("EAL_ID must be a non-empty, bounded URL path identifier");
     }
-    let mut url = reqwest::Url::parse(&format!("{base}/v1/alerts/"))?;
+    let mut url = reqwest::Url::parse(&format!("{base}/v1/alerts"))?;
     url.path_segments_mut()
         .map_err(|_| anyhow::anyhow!("EAL_BASE_URL must support path segments"))?
         .push(id);
